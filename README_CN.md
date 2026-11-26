@@ -1,59 +1,29 @@
-# 骤雨重山图床
+# jary 图床
 
-> 在现代互联网环境中，快速稳定的图片访问是提升用户体验的重要因素之一。本文将介绍如何利用Cloudflare Pages部署稳定的无限图床Imgur，实现图片上传和访问，并进一步通过WordPress的WP.COM全球图片缓存进行加速，提高图片加载速度。可用于免费图片托管解决方案，Flickr 等替代品。
+简体中文 · [English](README.md)
 
-[English](https://github.com/uxiaohan/ZYCS-IMG) | 简体中文
+基于 Vue 和 Cloudflare Pages Functions 的图片上传工具。支持选择、拖放和粘贴图片，上传成功后可复制图片链接、Markdown 或显示二维码。图片存放在 Imgur，上传记录保存在当前浏览器。
 
-## 简介
+## 本地预览
 
-- [Cloudflare Pages](https://pages.cloudflare.com/) 是一个强大的静态网站托管服务，结合了 Cloudflare 的全球 CDN（内容分发网络）优势。
+使用 Node.js 22.12+ 和 pnpm。
 
-- [Imgur](https://imgur.com/) 是一个免费优质的图床。
+~~~sh
+pnpm install --frozen-lockfile
+pnpm run build
+pnpm run preview:pages
+~~~
 
-- [WordPress 的全球图片缓存](https://01.wp.com/) 是一个高效的 CDN 服务，专门用于加速 WordPress 托管的图片内容。它利用全球分布的节点，将图片缓存并提供快速访问。
+打开 http://localhost:8788。Pages 预览会运行本地上传函数，并实际将图片上传到 Imgur。由于 WordPress 图片缓存无法回源到 localhost，本地预览显示 Imgur 直链。
 
-- [Cloudflare CDN（内容分发网络）](https://www.cloudflare.com/zh-cn/application-services/products/cdn/)是由Cloudflare提供的服务，旨在加速和保护和加速全球网络应用程序。
+只调试前端时可运行 `pnpm run dev`。如需连接已有的上传服务，在 `.env.dev.local` 中设置 `VITE_IMG_API_URL`。
 
-### 页面
+## 部署到 Cloudflare Pages
 
-![骤雨重山图床](https://uxiaohan.github.io/v2/2024/07/1721639712.png)
+将此仓库连接到 Pages，构建命令填 `pnpm run build`，构建输出目录填 `dist`。构建根目录使用仓库根目录，Pages 会加载 `functions` 中的路由。
 
-[点击体验Demo](https://wp-cdn.4ce.cn/)
+生产环境默认上传到当前站点的 `/upload`，分享链接使用 `/v2` 图片缓存路由。要使用自己的 Imgur Client ID，在 Pages 的 Functions 环境变量中设置 `IMGUR_CLIENT_ID`。
 
-## 如何部署
+## 许可证
 
-**一键部署**
-
-Vercel 自动部署
-
-[![骤雨重山图床](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/uxiaohan/ZYCS-IMG)
-
-Cloudflare Pages 自动部署
-
-[![骤雨重山图床](https://deploy.workers.cloudflare.com/button)](https://dash.cloudflare.com/?to=/:account/workers-and-pages/create/deploy-to-workers&repository=https://github.com/uxiaohan/ZYCS-IMG)
-
-**手动部署**
-
-- 1、准备一个 Cloudflare 账户
-- 2、Fork 本仓库，自由修改`App.vue`和`index.html`文件中的文案
-- 3、登录`Cloudflare Dashboard`打开`Workers 和 Pages`创建`Pages`
-- 4、`连接到Git`选择`Github`或`Gitlab`中你刚刚Fork的项目，点击开始设置
-- 5、只需要修改`框架预设`为`Vue`即可，点击保存并部署，即可部署成功并投入使用
-
-**图片步骤**
-
-![骤雨重山图床](https://uxiaohan.github.io/v2/2024/07/1721640641.png)
-![骤雨重山图床](https://uxiaohan.github.io/v2/2024/07/1721640649.png)
-![骤雨重山图床](https://uxiaohan.github.io/v2/2024/07/1721640656.png)
-
-### 特点
-
-- 无限图片储存数量，你可以上传不限数量的图片到`Imgur`
-
-- 无需购买服务器，托管于`Cloudflare Pages`上，每天10万次的请求
-
-- 无需购买域名，可以使用`Cloudflare Pages` 提供的`*.pages.dev`的免费二级域名，同时也支持绑定自定义域名
-
-### 项目地址
-
-[ZYCS-IMG - Github](https://github.com/uxiaohan/ZYCS-IMG)
+[MIT](LICENSE)

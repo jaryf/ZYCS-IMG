@@ -1,67 +1,58 @@
-.Upload {
-  margin: 1rem 0;
-  position: relative;
-  box-sizing: border-box;
+.dropzone {
   display: flex;
+  min-height: 228px;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 8rem;
-  border-radius: 0.5rem;
-  border: solid 1px #888888;
-  background: rgba(255, 255, 255, 0.5);
-  overflow: hidden;
-  z-index: 1;
-  cursor: pointer;
-  transition: all 0.18s;
+  gap: 13px;
+  padding: 23px 16px 20px;
+  border: 1px dashed #bec4e7;
+  border-radius: 14px;
+  background-color: #f9f9ff;
+  background-image: radial-gradient(#e5e5f4 0.8px, transparent 0.8px);
+  background-size: 17px 17px;
+  text-align: center;
+  transition: background-color 160ms ease, border-color 160ms ease;
 
-  &:hover {
-    border-color: #111111;
-
-    & > .placeholder {
-      color: #111111;
-    }
+  &:hover,
+  &:focus-within,
+  &.is-dragging {
+    border-color: var(--site-accent);
+    background-color: #f1f0ff;
   }
+}
 
-  & > input {
-    width: 100%;
-    height: 100%;
-    opacity: 0.5;
-    z-index: 9;
-    cursor: pointer;
-    opacity: 0;
-  }
+.dropzone-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid #e3e1fe;
+  border-radius: 13px;
+  background: #eeecff;
+  color: var(--site-accent);
+}
 
-  & > .placeholder {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.8rem;
-    width: 100%;
-    height: max-content;
-    font-size: 12px;
-    color: #888888;
-    pointer-events: none;
-    transition: all 0.18s;
+.dropzone-icon svg {
+  width: 24px;
+  height: 24px;
+}
 
-    & > svg {
-      width: 2rem;
-    }
+.dropzone-copy {
+  display: grid;
+  gap: 4px;
+  color: var(--site-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
 
-    & > p {
-      box-sizing: border-box;
-      padding: 0 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      line-height: 1.2;
-      & > span {
-        text-align: center;
-      }
-    }
-  }
+.dropzone-title {
+  color: var(--site-ink);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.dropzone-hint {
+  color: var(--site-muted);
+  font-size: 12px;
 }

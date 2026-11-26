@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 
 import { defineConfig } from 'vite'
@@ -15,6 +16,17 @@ export default defineConfig({
   },
   plugins: [
     vue(),
+    {
+      name: 'include-license',
+      apply: 'build',
+      generateBundle() {
+        this.emitFile({
+          type: 'asset',
+          fileName: 'LICENSE',
+          source: readFileSync(new URL('./LICENSE', import.meta.url)),
+        })
+      },
+    },
   ],
   resolve: {
     alias: {

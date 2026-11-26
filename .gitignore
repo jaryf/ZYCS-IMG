@@ -27,3 +27,7 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Local Cloudflare bindings
+.dev.vars*
+.wrangler/

@@ -1,13 +1,209 @@
-.Home {
-  box-sizing: border-box;
+.workspace {
+  display: grid;
+  gap: 20px;
   width: 100%;
+  padding: 28px 0 32px;
+}
 
-  .vh-tools {
-    box-sizing: border-box;
-    padding-bottom: 1rem;
-    width: 100%;
-    height: max-content;
-    display: flex;
-    justify-content: space-between;
+.hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  min-height: 248px;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid #333854;
+  border-radius: 20px;
+  background: #171a35;
+  color: #fff;
+}
+
+.hero::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 0 25%;
+  background:
+    linear-gradient(90deg, #171a35 0%, rgba(23, 26, 53, 0.68) 24%, transparent 72%),
+    url('@/assets/images/mountain-hero.webp') center 51% / cover no-repeat;
+  content: '';
+}
+
+.hero-content {
+  padding: 30px 44px 34px;
+}
+
+.hero h1 {
+  font-size: clamp(36px, 4.5vw, 56px);
+  font-weight: 760;
+  letter-spacing: -0.075em;
+  line-height: 1.12;
+}
+
+.hero h1 span {
+  color: #c9ccff;
+}
+
+.hero p {
+  margin-top: 17px;
+  color: #e5e7fa;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.panel {
+  min-width: 0;
+  scroll-margin-top: 82px;
+  border: 1px solid var(--site-border);
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: 0 2px 9px rgba(36, 39, 73, 0.035);
+}
+
+.panel-heading {
+  display: flex;
+  min-height: 41px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+}
+
+.panel-title svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  color: var(--site-accent);
+}
+
+.panel-title h2 {
+  color: var(--site-ink);
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.upload-panel,
+.history-panel {
+  padding: 10px 18px 17px;
+}
+
+.upload-panel .panel-heading {
+  margin-bottom: 7px;
+}
+
+.provider {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 9px;
+  border: 1px solid #e1ebe5;
+  border-radius: 6px;
+  background: #f4faf6;
+  color: #2f6849;
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.provider span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #489864;
+}
+
+.history-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 4px 7px;
+}
+
+.history-count {
+  min-width: 21px;
+  padding: 0 5px;
+  border-radius: 5px;
+  background: #f1f0fb;
+  color: #555298;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.history-empty {
+  display: flex;
+  min-height: 110px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 6px;
+  border-top: 1px solid var(--site-border);
+  color: var(--site-muted);
+  font-size: 13px;
+}
+
+.history-empty span {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 10px;
+  background: #f1f0fa;
+  color: #6363a1;
+}
+
+.history-empty svg {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 600px) {
+  .workspace {
+    gap: 14px;
+    padding-top: 15px;
+  }
+
+  .hero {
+    min-height: 221px;
+    border-radius: 14px;
+  }
+
+  .hero::before {
+    inset: 0 0 0 8%;
+    background-position: center, 58% center;
+  }
+
+  .hero-content {
+    padding: 24px 20px;
+  }
+
+  .hero p {
+    max-width: 235px;
+    margin-top: 12px;
+    font-size: 13px;
+  }
+
+  .upload-panel,
+  .history-panel {
+    padding: 8px 11px 11px;
+  }
+
+  .history-actions .button {
+    gap: 3px;
+    padding-right: 5px;
+    padding-left: 5px;
+    font-size: 11px;
+  }
+
+  .history-actions svg {
+    width: 12px;
+    height: 12px;
   }
 }

@@ -1,73 +1,212 @@
 <template>
-  <section class="Home pt-4 sm:pt-6">
-    <Alert class="pt-0 pb-2 sm:py-4">
-      <AlertTitle class="font-bold hidden sm:flex sm:gap-2"> <RocketIcon class="h-4 w-4 hidden sm:flex" /> Heads up!</AlertTitle>
-      <AlertDescription class="p-0 text-xs sm:text-sm">
-        <p class="pt-2">无限图片储存数量，你可以上传不限数量的图片！</p>
-        <p>图片首次访问后缓存，"永久"有效，包括全球分布的 CDN，以确保尽可能快地提供图像.</p>
-        <p>骤雨重山图床 是 <a class="text-slate-400" href="https://www.vvhan.com" target="_blank" title="韩小韩博客">韩小韩博客</a> 支持并维护的文件上传项目，致力于为用户提供稳定的永久存储服务。</p>
-        <p style="font-weight: bold">开源地址: <a class="text-[#0969da]" href="https://github.com/uxiaohan/ZYCS-IMG" target="_blank">ZYCS-IMG</a></p>
-      </AlertDescription>
-    </Alert>
-
-    <!-- 工具栏 -->
-    <div class="pt-6 flex items-center text-sm">
-      <div class="sync shrink-0">
-        <RadioGroup default-value="sync" class="flex items-center gap-4 [&>label]:flex [&>label]:items-center [&>label]:space-x-2 [&>label]:cursor-pointer">
-          <Label for="sync">
-            <RadioGroupItem id="sync" value="sync" />
-            <span>Imgur</span>
-          </Label>
-          <Label for="nosync">
-            <RadioGroupItem id="nosync" value="nosync" disabled />
-            <span class="text-gray-300">待定</span>
-          </Label>
-        </RadioGroup>
+  <div class="workspace">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-content">
+        <h1 id="hero-title">上传图片，<br /><span>轻松分享。</span></h1>
+        <p>上传后即可复制图片链接，支持 Markdown 和二维码。</p>
       </div>
-    </div>
-    <!-- 上传 -->
-    <Upload v-model="fileList" :UploadConfig="UploadConfig" :uploadAPI="uploadAPI" />
-    <section v-show="fileList.length" class="vh-tools"><Button @click="fileList = []">清空</Button><Button @click="vh.CopyText(fileList.map((i: any) => i.upload_blob).join('\n'))">复制全部</Button></section>
-    <!-- 展示 -->
-    <ResList v-model="fileList" :nodeHost="nodeHost" />
-  </section>
+    </section>
+
+    <section id="upload" class="panel upload-panel" aria-labelledby="upload-title">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <UploadIcon aria-hidden="true" />
+          <h2 id="upload-title">上传图片</h2>
+        </div>
+        <span class="provider"><span aria-hidden="true"></span>Imgur 存储</span>
+      </div>
+      <Upload @select="addFiles" />
+    </section>
+
+    <section id="history" class="panel history-panel" aria-labelledby="history-title">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <ClockIcon aria-hidden="true" />
+          <h2 id="history-title">上传记录</h2>
+          <span v-if="completed.length" class="history-count">{{ completed.length }}</span>
+        </div>
+        <div v-if="uploads.length" class="history-actions">
+          <button
+            class="button button-subtle"
+            type="button"
+            :disabled="!completed.length"
+            @click="copyAll"
+          >
+            <CopyIcon aria-hidden="true" />
+            复制全部
+          </button>
+          <button
+            class="button button-subtle"
+            type="button"
+            :disabled="!hasFinished"
+            @click="clearFinished"
+          >
+            <TrashIcon aria-hidden="true" />
+            清空记录
+          </button>
+        </div>
+      </div>
+
+      <ResList v-if="uploads.length" :items="uploads" :api-origin="apiOrigin" @retry="retry" />
+      <div v-else class="history-empty">
+        <span aria-hidden="true"><ImageIcon /></span>
+        <p>暂无上传记录</p>
+      </div>
+    </section>
+  </div>
 </template>
+
 <script setup lang="ts">
-import vh from 'vh-plugin';
-import { ref, watch } from 'vue';
-import { formatURL } from '@/utils/index';
-import { Button } from '@/components/ui/button';
-import Upload from '@/components/Upload/Upload.vue';
-import ResList from '@/components/ResList/ResList.vue';
-import { RocketIcon } from '@radix-icons/vue';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-// IPFS节点
-const nodeHost = ref<string>(import.meta.env.VITE_IMG_API_URL || location.origin);
-// 上传接口
-const uploadAPI = ref<string>(`${import.meta.env.VITE_IMG_API_URL || location.origin}/upload`);
-// 上传配置
-const UploadConfig = ref<any>({
-  AcceptTypes: 'image/*', // 允许上传的类型，使用逗号分隔
-  Max: 0, //多选个数，0为不限制
-  MaxSize: 15, //单个文件大小限制，单位：MB
-});
-// 上传列表
-const fileList = ref<Array<any>>(JSON.parse(localStorage.getItem('zychUpImageList') || '[]'));
-watch(fileList, (newVal) => {
-  localStorage.setItem(
-    'zychUpImageList',
-    JSON.stringify(
-      newVal
-        .filter((i: any) => i.upload_status == 'success')
-        .map((i: any) => {
-          i.upload_blob = formatURL({ nodeHost: nodeHost.value }, i.upload_result);
-          return i;
-        }),
-    ),
-  );
-});
+import { ClockIcon, CopyIcon, ImageIcon, TrashIcon, UploadIcon } from '@radix-icons/vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import ResList from '@/components/ResList/ResList.vue'
+import Upload from '@/components/Upload/Upload.vue'
+import { useToast } from '@/components/ui/toast/use-toast'
+import {
+  copyText,
+  getImageUrl,
+  getShareUrl,
+  MAX_IMAGE_BYTES,
+  MAX_IMAGE_MB,
+  prepareUpload,
+  readUploadHistory,
+  saveUploadHistory,
+  type SavedUpload,
+  type UploadItem,
+} from '@/utils'
+
+const apiOrigin = new URL(
+  import.meta.env.VITE_IMG_API_URL || location.origin,
+  location.origin,
+).href.replace(/\/+$/, '')
+
+const { toast } = useToast()
+const maximumConcurrentUploads = 3
+let lastId = 0
+let ongoingUploads = 0
+let disposed = false
+const uploads = ref<UploadItem[]>(
+  readUploadHistory().map((item) => ({ ...item, id: ++lastId, status: 'success' })),
+)
+
+const completed = computed(() =>
+  uploads.value.flatMap<SavedUpload>((item) =>
+    item.status === 'success' && item.originalUrl
+      ? [{ name: item.name, size: item.size, originalUrl: item.originalUrl }]
+      : [],
+  ),
+)
+const hasFinished = computed(() =>
+  uploads.value.some((item) => item.status === 'success' || item.status === 'error'),
+)
+
+watch(completed, saveUploadHistory)
+
+function addFiles(files: File[]) {
+  const valid = files.filter((file) =>
+    file.type.startsWith('image/') && file.size > 0 && file.size <= MAX_IMAGE_BYTES,
+  )
+  if (valid.length !== files.length) {
+    toast({
+      title: '部分文件无法上传',
+      description: '请选择有效图片，每张最多 ' + MAX_IMAGE_MB + ' MB。',
+    })
+  }
+
+  for (const file of valid) {
+    uploads.value.push({
+      id: ++lastId,
+      name: file.name,
+      size: file.size,
+      file,
+      status: 'queued',
+      preview: URL.createObjectURL(file),
+    })
+  }
+  startQueuedUploads()
+}
+
+function startQueuedUploads() {
+  while (!disposed && ongoingUploads < maximumConcurrentUploads) {
+    const item = uploads.value.find((upload) => upload.status === 'queued')
+    if (!item) return
+
+    ongoingUploads += 1
+    item.status = 'uploading'
+    void sendUpload(item)
+  }
+}
+
+async function sendUpload(item: UploadItem) {
+  try {
+    if (!item.file) throw new Error('请重新选择这张图片')
+    const file = await prepareUpload(item.file)
+    if (file.size > MAX_IMAGE_BYTES) {
+      throw new Error('转换后的图片超过 ' + MAX_IMAGE_MB + ' MB')
+    }
+
+    const form = new FormData()
+    form.append('file', file)
+    const response = await fetch(apiOrigin + '/upload', {
+      method: 'POST',
+      body: form,
+      signal: AbortSignal.timeout(35_000),
+    })
+    const result = await response.json().catch(() => null)
+    const originalUrl = getImageUrl(result?.data?.link)
+    if (!response.ok || result?.success !== true || !originalUrl) {
+      const upstreamError = result?.data?.error
+      if (response.status === 429) throw new Error('Imgur 请求过多，请稍后重试')
+      throw new Error(typeof upstreamError === 'string' ? upstreamError : 'Imgur 上传失败，请重试')
+    }
+
+    item.originalUrl = originalUrl
+    item.status = 'success'
+    item.file = undefined
+    releasePreview(item)
+  } catch (error) {
+    item.status = 'error'
+    item.error = error instanceof Error ? error.message : '上传失败，请重试'
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      item.error = '上传超时，请重试'
+    }
+  } finally {
+    ongoingUploads -= 1
+    startQueuedUploads()
+  }
+}
+
+function retry(item: UploadItem) {
+  if (item.status !== 'error') return
+  item.error = undefined
+  item.status = 'queued'
+  startQueuedUploads()
+}
+
+function releasePreview(item: UploadItem) {
+  if (item.preview) URL.revokeObjectURL(item.preview)
+  item.preview = undefined
+}
+
+function clearFinished() {
+  uploads.value = uploads.value.filter((item) => {
+    if (item.status === 'queued' || item.status === 'uploading') return true
+    releasePreview(item)
+    return false
+  })
+}
+
+async function copyAll() {
+  if (!completed.value.length) return
+  const links = completed.value.map(({ originalUrl }) => getShareUrl(originalUrl, apiOrigin))
+  const copied = await copyText(links.join('\n'))
+  toast({ title: copied ? '已复制全部链接' : '复制失败，请重试' })
+}
+
+onBeforeUnmount(() => {
+  disposed = true
+  uploads.value.forEach(releasePreview)
+})
 </script>
 
 <style scoped lang="less">
